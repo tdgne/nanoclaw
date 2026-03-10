@@ -10,4 +10,7 @@
 // telegram
 import './telegram.js';
 
+// cli
+import './cli.js';
+
 // whatsapp
