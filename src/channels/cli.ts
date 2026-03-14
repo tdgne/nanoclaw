@@ -10,6 +10,8 @@ import { Channel } from '../types.js';
 const CLI_JID = 'cli:local';
 export const CLI_SOCKET_PATH = path.join(DATA_DIR, 'cli.sock');
 
+const STATUS_BROADCAST_INTERVAL = 1000;
+
 export class CliChannel implements Channel {
   name = 'cli';
 
@@ -18,6 +20,7 @@ export class CliChannel implements Channel {
   private opts: ChannelOpts;
   private connected = false;
   private messageCounter = 0;
+  private statusTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(opts: ChannelOpts) {
     this.opts = opts;
@@ -103,6 +106,20 @@ export class CliChannel implements Channel {
       });
       this.server!.on('error', reject);
     });
+
+    // Broadcast system status to connected clients periodically
+    if (this.opts.getSystemStatus) {
+      this.statusTimer = setInterval(() => {
+        if (this.clients.size === 0) return;
+        const status = this.opts.getSystemStatus!();
+        const payload = JSON.stringify({ status }) + '\n';
+        for (const client of this.clients) {
+          if (!client.destroyed) {
+            client.write(payload);
+          }
+        }
+      }, STATUS_BROADCAST_INTERVAL);
+    }
   }
 
   async sendMessage(_jid: string, text: string): Promise<void> {
@@ -132,6 +149,10 @@ export class CliChannel implements Channel {
   }
 
   async disconnect(): Promise<void> {
+    if (this.statusTimer) {
+      clearInterval(this.statusTimer);
+      this.statusTimer = null;
+    }
     for (const client of this.clients) {
       client.destroy();
     }

@@ -27,6 +27,23 @@ interface GroupState {
   retryCount: number;
 }
 
+export interface GroupStatusInfo {
+  jid: string;
+  state: 'active' | 'idle' | 'queued' | 'retry' | 'inactive';
+  pendingMessages: boolean;
+  pendingTaskCount: number;
+  runningTaskId: string | null;
+  retryCount: number;
+  groupFolder: string | null;
+}
+
+export interface QueueStatus {
+  activeCount: number;
+  maxContainers: number;
+  waitingCount: number;
+  groups: GroupStatusInfo[];
+}
+
 export class GroupQueue {
   private groups = new Map<string, GroupState>();
   private activeCount = 0;
@@ -57,6 +74,41 @@ export class GroupQueue {
 
   setProcessMessagesFn(fn: (groupJid: string) => Promise<boolean>): void {
     this.processMessagesFn = fn;
+  }
+
+  getStatus(): QueueStatus {
+    const groups: GroupStatusInfo[] = [];
+    for (const [jid, state] of this.groups) {
+      let groupState: GroupStatusInfo['state'];
+      if (state.active && state.idleWaiting) {
+        groupState = 'idle';
+      } else if (state.active) {
+        groupState = 'active';
+      } else if (state.retryCount > 0) {
+        groupState = 'retry';
+      } else if (state.pendingMessages || state.pendingTasks.length > 0) {
+        groupState = 'queued';
+      } else {
+        groupState = 'inactive';
+      }
+
+      groups.push({
+        jid,
+        state: groupState,
+        pendingMessages: state.pendingMessages,
+        pendingTaskCount: state.pendingTasks.length,
+        runningTaskId: state.runningTaskId,
+        retryCount: state.retryCount,
+        groupFolder: state.groupFolder,
+      });
+    }
+
+    return {
+      activeCount: this.activeCount,
+      maxContainers: MAX_CONCURRENT_CONTAINERS,
+      waitingCount: this.waitingGroups.length,
+      groups,
+    };
   }
 
   enqueueMessageCheck(groupJid: string): void {

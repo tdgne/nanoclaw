@@ -43,6 +43,7 @@ import {
   storeChatMetadata,
   storeMessage,
 } from './db.js';
+import type { SystemStatus } from './channels/registry.js';
 import { GroupQueue } from './group-queue.js';
 import { resolveGroupFolderPath } from './group-folder.js';
 import { startIpcWatcher } from './ipc.js';
@@ -65,9 +66,27 @@ let sessions: Record<string, string> = {};
 let registeredGroups: Record<string, RegisteredGroup> = {};
 let lastAgentTimestamp: Record<string, string> = {};
 let messageLoopRunning = false;
+const startTime = Date.now();
 
 const channels: Channel[] = [];
 const queue = new GroupQueue();
+
+function getSystemStatus(): SystemStatus {
+  const tasks = getAllTasks();
+  const activeTasks = tasks.filter((t) => t.status === 'active');
+  const nextRun = activeTasks
+    .map((t) => t.next_run)
+    .filter((r): r is string => r !== null)
+    .sort()[0] || null;
+
+  return {
+    queue: queue.getStatus(),
+    activeTasks: activeTasks.length,
+    nextTaskRun: nextRun,
+    uptime: Date.now() - startTime,
+    channels: channels.filter((ch) => ch.isConnected()).map((ch) => ch.name),
+  };
+}
 
 function loadState(): void {
   lastTimestamp = getRouterState('last_timestamp') || '';
@@ -519,6 +538,7 @@ async function main(): Promise<void> {
     ) => storeChatMetadata(chatJid, timestamp, name, channel, isGroup),
     registeredGroups: () => registeredGroups,
     registerGroup,
+    getSystemStatus,
   };
 
   // Create and connect all registered channels.
