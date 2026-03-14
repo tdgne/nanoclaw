@@ -1,0 +1,23 @@
+{
+  "skill_name": "add-mount",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "nanoclawのエージェントから ~/projects/my-webapp を読み書きできるようにしたい。全グループで。",
+      "expected_output": "allowlist に AllowedRoot オブジェクトとして追加し、全グループの additionalMounts に hostPath を追加し、再起動を案内する",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "~/Documents/research-papers をエージェントから読めるようにマウントして。読み取り専用でいい。cli:local だけ。",
+      "expected_output": "allowlist に allowReadWrite: false で追加し、cli:local グループのみの additionalMounts に追加する",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "エージェントに dotfiles ディレクトリへのアクセスを追加して。~/dotfiles を全グループで読み書き可能に。",
+      "expected_output": "allowlist に既に ~/dotfiles があることを確認し、allowReadWrite を true に更新。全グループの additionalMounts に追加。dotfiles 内の .ssh 等はブロックパターンで保護されていることに言及。",
+      "files": []
+    }
+  ]
+}
