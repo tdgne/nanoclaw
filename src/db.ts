@@ -363,6 +363,26 @@ export function getMessagesSince(
     .all(chatJid, sinceTimestamp, `${botPrefix}:%`, limit) as NewMessage[];
 }
 
+/**
+ * Get the most recent messages for a chat, including bot messages.
+ * Used for CLI inspection commands.
+ */
+export function getRecentMessages(
+  chatJid: string,
+  limit: number = 20,
+): NewMessage[] {
+  const sql = `
+    SELECT * FROM (
+      SELECT id, chat_jid, sender, sender_name, content, timestamp, is_from_me, is_bot_message
+      FROM messages
+      WHERE chat_jid = ? AND content != '' AND content IS NOT NULL
+      ORDER BY timestamp DESC
+      LIMIT ?
+    ) ORDER BY timestamp
+  `;
+  return db.prepare(sql).all(chatJid, limit) as NewMessage[];
+}
+
 export function createTask(
   task: Omit<ScheduledTask, 'last_run' | 'last_result'>,
 ): void {
