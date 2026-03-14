@@ -74,10 +74,11 @@ const queue = new GroupQueue();
 function getSystemStatus(): SystemStatus {
   const tasks = getAllTasks();
   const activeTasks = tasks.filter((t) => t.status === 'active');
-  const nextRun = activeTasks
-    .map((t) => t.next_run)
-    .filter((r): r is string => r !== null)
-    .sort()[0] || null;
+  const nextRun =
+    activeTasks
+      .map((t) => t.next_run)
+      .filter((r): r is string => r !== null)
+      .sort()[0] || null;
 
   return {
     queue: queue.getStatus(),

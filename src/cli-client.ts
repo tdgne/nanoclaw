@@ -388,7 +388,10 @@ if (process.stdin.isTTY) {
       computeAutocomplete(currentLine);
 
       // If autocomplete state changed, redraw
-      if (ghostText !== prevGhost || autocompleteLines.length !== prevAutoLines) {
+      if (
+        ghostText !== prevGhost ||
+        autocompleteLines.length !== prevAutoLines
+      ) {
         // Clear ghost text from display by rewriting the prompt line
         process.stdout.write(`\r\x1b[K> ${currentLine}`);
         renderGhostText();

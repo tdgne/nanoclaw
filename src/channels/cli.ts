@@ -172,7 +172,10 @@ export class CliChannel implements Channel {
       case '/memory':
         return this.cmdMemory(parts[1]);
       case '/messages':
-        return this.cmdMessages(parts[1], parts[2] ? parseInt(parts[2], 10) : undefined);
+        return this.cmdMessages(
+          parts[1],
+          parts[2] ? parseInt(parts[2], 10) : undefined,
+        );
       case '/tasks':
         return this.cmdTasks();
       case '/sessions':
@@ -240,10 +243,15 @@ export class CliChannel implements Channel {
     const messages = getRecentMessages(targetJid, limit);
     if (messages.length === 0) return `No messages in "${targetFolder}".`;
 
-    const lines = [`Recent messages in ${targetFolder} (${messages.length}):`, ''];
+    const lines = [
+      `Recent messages in ${targetFolder} (${messages.length}):`,
+      '',
+    ];
     for (const m of messages) {
       const time = new Date(m.timestamp).toLocaleString();
-      const prefix = m.is_from_me ? `[${ASSISTANT_NAME}]` : `[${m.sender_name || m.sender}]`;
+      const prefix = m.is_from_me
+        ? `[${ASSISTANT_NAME}]`
+        : `[${m.sender_name || m.sender}]`;
       lines.push(`  ${time}  ${prefix}  ${m.content}`);
     }
     return lines.join('\n');
@@ -255,12 +263,19 @@ export class CliChannel implements Channel {
 
     const lines = ['Scheduled Tasks:', ''];
     for (const t of tasks) {
-      const status = t.status === 'active' ? '●' : t.status === 'paused' ? '◌' : '✓';
+      const status =
+        t.status === 'active' ? '●' : t.status === 'paused' ? '◌' : '✓';
       lines.push(`  ${status} ${t.id}  [${t.status}]`);
-      lines.push(`    group: ${t.group_folder}  schedule: ${t.schedule_type} ${t.schedule_value}`);
-      lines.push(`    prompt: ${t.prompt.slice(0, 80)}${t.prompt.length > 80 ? '...' : ''}`);
-      if (t.next_run) lines.push(`    next: ${new Date(t.next_run).toLocaleString()}`);
-      if (t.last_run) lines.push(`    last: ${new Date(t.last_run).toLocaleString()}`);
+      lines.push(
+        `    group: ${t.group_folder}  schedule: ${t.schedule_type} ${t.schedule_value}`,
+      );
+      lines.push(
+        `    prompt: ${t.prompt.slice(0, 80)}${t.prompt.length > 80 ? '...' : ''}`,
+      );
+      if (t.next_run)
+        lines.push(`    next: ${new Date(t.next_run).toLocaleString()}`);
+      if (t.last_run)
+        lines.push(`    last: ${new Date(t.last_run).toLocaleString()}`);
     }
     return lines.join('\n');
   }
