@@ -114,6 +114,15 @@ export class CliChannel implements Channel {
     }
   }
 
+  async setTyping(_jid: string, isTyping: boolean): Promise<void> {
+    const payload = JSON.stringify({ typing: isTyping }) + '\n';
+    for (const client of this.clients) {
+      if (!client.destroyed) {
+        client.write(payload);
+      }
+    }
+  }
+
   isConnected(): boolean {
     return this.connected;
   }
